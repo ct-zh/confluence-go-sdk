@@ -42,7 +42,16 @@ func loadIntegrationConfig(t *testing.T) *IntegrationConfig {
 
 // createIntegrationClient 创建用于集成测试的 Client
 func createIntegrationClient(t *testing.T, config *IntegrationConfig) *Client {
-	client, err := NewClient(config.BaseURL, WithAuth(config.Username, config.Token))
+	var opts []Option
+	if config.Username != "" {
+		// 如果提供了用户名，使用 Basic Auth (Email + API Token)
+		opts = append(opts, WithAuth(config.Username, config.Token))
+	} else {
+		// 如果没有用户名，使用 Bearer Token (PAT)
+		opts = append(opts, WithToken(config.Token))
+	}
+
+	client, err := NewClient(config.BaseURL, opts...)
 	if err != nil {
 		t.Fatalf("Failed to create client: %v", err)
 	}
