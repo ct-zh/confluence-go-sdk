@@ -1,7 +1,6 @@
 package confluence
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -204,34 +203,47 @@ func (s *ContentService) GetAttachments(ctx context.Context, contentID string, o
 func (s *ContentService) UploadAttachment(ctx context.Context, contentID string, filename string, data io.Reader, comment string) (*SearchResult, *http.Response, error) {
 	u := fmt.Sprintf("rest/api/content/%s/child/attachment", url.PathEscape(contentID))
 
-	// 创建 multipart body
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	// 使用 io.Pipe 实现流式上传，避免大文件占用过多内存
+	pr, pw := io.Pipe()
+	writer := multipart.NewWriter(pw)
 
-	// 添加文件
-	part, err := writer.CreateFormFile("file", filename)
-	if err != nil {
-		return nil, nil, err
-	}
-	if _, err := io.Copy(part, data); err != nil {
-		return nil, nil, err
-	}
+	// 使用 channel 捕获 goroutine 中的错误
+	errChan := make(chan error, 1)
 
-	// 添加注释（可选）
-	if comment != "" {
-		if err := writer.WriteField("comment", comment); err != nil {
-			return nil, nil, err
+	go func() {
+		defer pw.Close()
+		defer close(errChan)
+
+		// 添加文件
+		part, err := writer.CreateFormFile("file", filename)
+		if err != nil {
+			errChan <- err
+			return
 		}
-	}
+		if _, err := io.Copy(part, data); err != nil {
+			errChan <- err
+			return
+		}
 
-	// 关闭 writer 以写入结尾 boundary
-	if err := writer.Close(); err != nil {
-		return nil, nil, err
-	}
+		// 添加注释（可选）
+		if comment != "" {
+			if err := writer.WriteField("comment", comment); err != nil {
+				errChan <- err
+				return
+			}
+		}
+
+		// 关闭 writer 以写入结尾 boundary
+		if err := writer.Close(); err != nil {
+			errChan <- err
+			return
+		}
+	}()
 
 	// 创建请求
-	req, err := s.client.NewRequest(ctx, "POST", u, body)
+	req, err := s.client.NewRequest(ctx, "POST", u, pr)
 	if err != nil {
+		pr.Close() // 确保 pipe 被关闭
 		return nil, nil, err
 	}
 
@@ -242,6 +254,17 @@ func (s *ContentService) UploadAttachment(ctx context.Context, contentID string,
 
 	var result SearchResult
 	resp, err := s.client.Do(req, &result)
+
+	// 检查 pipe goroutine 是否发生错误
+	if pipeErr := <-errChan; pipeErr != nil {
+		// 如果 http 请求也失败了，优先返回 pipe 错误（通常是根本原因）
+		// 或者合并错误信息
+		if err != nil {
+			return nil, resp, fmt.Errorf("upload error: %v, request error: %v", pipeErr, err)
+		}
+		return nil, resp, pipeErr
+	}
+
 	if err != nil {
 		return nil, resp, err
 	}
