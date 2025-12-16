@@ -33,11 +33,11 @@ type IContentService interface {
 
 请研发工程师按以下顺序执行：
 
-- [ ] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `GetChildPages` 和 `GetAttachments`。
-- [ ] **Implementation**: 在 `confluence/content.go` 中实现上述方法。
+- [x] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `GetChildPages` 和 `GetAttachments`。
+- [x] **Implementation**: 在 `confluence/content.go` 中实现上述方法。
     - `GetChildPages`: 实际上是调用 `/rest/api/content/{id}/child/page`。
     - `GetAttachments`: 调用 `/rest/api/content/{id}/child/attachment`。
-- [ ] **Test**: 更新 `confluence/content_test.go`，增加对应的 Mock 测试。
+- [x] **Test**: 更新 `confluence/content_test.go`，增加对应的 Mock 测试。
 
 ---
 **技术债 (Tech Debt)**:

@@ -12,6 +12,10 @@ type IContentService interface {
 	Create(ctx context.Context, content *Content) (*Content, *http.Response, error)
 	Update(ctx context.Context, contentID string, content *Content) (*Content, *http.Response, error)
 	Delete(ctx context.Context, contentID string) (*http.Response, error)
+	// GetChildPages 获取子页面
+	GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error)
+	// GetAttachments 获取页面的附件列表
+	GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error)
 }
 
 // ISearchService 定义 SearchService 的行为接口

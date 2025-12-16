@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -33,7 +34,6 @@ type Version struct {
 	MinorEdit bool   `json:"minorEdit,omitempty"`
 }
 
-
 // Body 内容正文
 type Body struct {
 	Storage *BodyContent `json:"storage,omitempty"` // 存储格式 (XHTML)
@@ -56,6 +56,20 @@ type Links struct {
 // GetContentOptions 获取内容的选项
 type GetContentOptions struct {
 	Expand []string // 需要展开的字段，如 "body.storage", "space", "version"
+}
+
+// GetChildPagesOptions 获取子页面的选项
+type GetChildPagesOptions struct {
+	Expand []string // 需要展开的字段
+	Start  int      // 起始位置
+	Limit  int      // 每页数量
+}
+
+// GetAttachmentsOptions 获取附件的选项
+type GetAttachmentsOptions struct {
+	Expand []string // 需要展开的字段
+	Start  int      // 起始位置
+	Limit  int      // 每页数量
 }
 
 // Get 根据 ID 获取单篇内容
@@ -98,8 +112,7 @@ func (s *ContentService) Create(ctx context.Context, content *Content) (*Content
 	return &createdContent, resp, nil
 }
 
-// Update 更新现有内容
-// 注意: 必须提供 content.Version.Number (通常是当前版本号 + 1)
+// Update 更新内容
 // 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content/#api-wiki-rest-api-content-id-put
 func (s *ContentService) Update(ctx context.Context, contentID string, content *Content) (*Content, *http.Response, error) {
 	path := fmt.Sprintf("rest/api/content/%s", contentID)
@@ -127,4 +140,70 @@ func (s *ContentService) Delete(ctx context.Context, contentID string) (*http.Re
 	}
 
 	return s.client.Do(req, nil)
+}
+
+// GetChildPages 获取子页面
+// 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-children-and-descendants/#api-wiki-rest-api-content-id-child-page-get
+func (s *ContentService) GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error) {
+	u := fmt.Sprintf("rest/api/content/%s/child/page", contentID)
+
+	if opts != nil {
+		q := url.Values{}
+		q.Set("start", fmt.Sprintf("%d", opts.Start))
+		if opts.Limit != 0 {
+			q.Set("limit", fmt.Sprintf("%d", opts.Limit))
+		}
+		if len(opts.Expand) > 0 {
+			q.Set("expand", strings.Join(opts.Expand, ","))
+		}
+		if len(q) > 0 {
+			u += "?" + q.Encode()
+		}
+	}
+
+	req, err := s.client.NewRequest(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var result SearchResult
+	resp, err := s.client.Do(req, &result)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return &result, resp, nil
+}
+
+// GetAttachments 获取页面的附件列表
+// 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-children-and-descendants/#api-wiki-rest-api-content-id-child-attachment-get
+func (s *ContentService) GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error) {
+	u := fmt.Sprintf("rest/api/content/%s/child/attachment", contentID)
+
+	if opts != nil {
+		q := url.Values{}
+		q.Set("start", fmt.Sprintf("%d", opts.Start))
+		if opts.Limit != 0 {
+			q.Set("limit", fmt.Sprintf("%d", opts.Limit))
+		}
+		if len(opts.Expand) > 0 {
+			q.Set("expand", strings.Join(opts.Expand, ","))
+		}
+		if len(q) > 0 {
+			u += "?" + q.Encode()
+		}
+	}
+
+	req, err := s.client.NewRequest(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var result SearchResult
+	resp, err := s.client.Do(req, &result)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return &result, resp, nil
 }
