@@ -32,12 +32,12 @@ type IContentService interface {
 
 请研发工程师按以下顺序执行：
 
-- [ ] **Core Refactor**: 修改 `confluence/client.go`，使 `NewRequest` 支持 `io.Reader` 作为 Body，或添加 `NewUploadRequest` 辅助方法。
-- [ ] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `UploadAttachment`。
-- [ ] **Implementation**: 在 `confluence/content.go` 中实现 `UploadAttachment`。
+- [x] **Core Refactor**: 修改 `confluence/client.go`，使 `NewRequest` 支持 `io.Reader` 作为 Body，或添加 `NewUploadRequest` 辅助方法。
+- [x] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `UploadAttachment`。
+- [x] **Implementation**: 在 `confluence/content.go` 中实现 `UploadAttachment`。
     - 使用 `mime/multipart` 构造请求体。
     - 确保正确设置 Boundary。
-- [ ] **Test**: 更新 `confluence/content_test.go`，增加附件上传的 Mock 测试。
+- [x] **Test**: 更新 `confluence/content_test.go`，增加附件上传的 Mock 测试。
 
 ---
 **历史记录 (History)**:
