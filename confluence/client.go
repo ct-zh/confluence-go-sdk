@@ -26,6 +26,7 @@ type Client struct {
 	// 将在这里挂载各个业务模块
 	Content IContentService
 	Search  ISearchService
+	Space   ISpaceService
 }
 
 // NewClient 创建一个新的 Confluence 客户端
@@ -49,6 +50,7 @@ func NewClient(baseURL string, opts ...Option) (*Client, error) {
 	// 初始化 Services
 	c.Content = &ContentService{client: c}
 	c.Search = &SearchService{client: c}
+	c.Space = &SpaceService{client: c}
 
 	return c, nil
 }

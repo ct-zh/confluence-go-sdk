@@ -33,12 +33,6 @@ type Version struct {
 	MinorEdit bool   `json:"minorEdit,omitempty"`
 }
 
-// Space 空间信息
-type Space struct {
-	ID   int64  `json:"id,omitempty"`
-	Key  string `json:"key,omitempty"`
-	Name string `json:"name,omitempty"`
-}
 
 // Body 内容正文
 type Body struct {

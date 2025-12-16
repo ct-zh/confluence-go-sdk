@@ -18,3 +18,11 @@ type IContentService interface {
 type ISearchService interface {
 	Search(ctx context.Context, opts *SearchOptions) (*SearchResult, *http.Response, error)
 }
+
+// ISpaceService 定义 SpaceService 的行为接口
+type ISpaceService interface {
+	Get(ctx context.Context, spaceKey string, opts *GetSpaceOptions) (*Space, *http.Response, error)
+	Create(ctx context.Context, space *Space, opts *CreateSpaceOptions) (*Space, *http.Response, error)
+	Update(ctx context.Context, spaceKey string, space *Space) (*Space, *http.Response, error)
+	Delete(ctx context.Context, spaceKey string) (*http.Response, error)
+}
