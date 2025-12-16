@@ -16,3 +16,11 @@
 *   **Code Refactoring**: 提取了 `addPaginationParams` 辅助方法，消除了参数构建逻辑的重复。
 *   **Security**: 在 URL 构建中加入了 `url.PathEscape(contentID)`，防止特殊字符导致的路由错误。
 *   **Test Coverage**: 补充了 `NilOptions` 和参数组合的测试用例，测试覆盖率提升。
+
+## 5. 测试报告 (Test Report)
+*   **边缘测试 (Edge Testing)**: 新增 `confluence/content_edge_test.go`，覆盖以下场景：
+    *   **Context Cancellation**: 验证请求超时或取消时的正确行为。
+    *   **Server Error (500)**: 验证客户端对服务器内部错误的处理。
+    *   **Invalid JSON**: 验证对畸形响应体的健壮性。
+    *   **URL Escaping**: 深度验证特殊字符（如 `?`, `/`, `&`）在 Path 中的转义逻辑。
+*   **结论**: 系统在异常情况下的表现符合预期，未发现 Panic 或未处理的错误。
