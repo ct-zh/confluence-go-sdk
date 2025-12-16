@@ -145,17 +145,11 @@ func (s *ContentService) Delete(ctx context.Context, contentID string) (*http.Re
 // GetChildPages 获取子页面
 // 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-children-and-descendants/#api-wiki-rest-api-content-id-child-page-get
 func (s *ContentService) GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error) {
-	u := fmt.Sprintf("rest/api/content/%s/child/page", contentID)
+	u := fmt.Sprintf("rest/api/content/%s/child/page", url.PathEscape(contentID))
 
 	if opts != nil {
 		q := url.Values{}
-		q.Set("start", fmt.Sprintf("%d", opts.Start))
-		if opts.Limit != 0 {
-			q.Set("limit", fmt.Sprintf("%d", opts.Limit))
-		}
-		if len(opts.Expand) > 0 {
-			q.Set("expand", strings.Join(opts.Expand, ","))
-		}
+		addPaginationParams(q, opts.Start, opts.Limit, opts.Expand)
 		if len(q) > 0 {
 			u += "?" + q.Encode()
 		}
@@ -178,17 +172,11 @@ func (s *ContentService) GetChildPages(ctx context.Context, contentID string, op
 // GetAttachments 获取页面的附件列表
 // 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-children-and-descendants/#api-wiki-rest-api-content-id-child-attachment-get
 func (s *ContentService) GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error) {
-	u := fmt.Sprintf("rest/api/content/%s/child/attachment", contentID)
+	u := fmt.Sprintf("rest/api/content/%s/child/attachment", url.PathEscape(contentID))
 
 	if opts != nil {
 		q := url.Values{}
-		q.Set("start", fmt.Sprintf("%d", opts.Start))
-		if opts.Limit != 0 {
-			q.Set("limit", fmt.Sprintf("%d", opts.Limit))
-		}
-		if len(opts.Expand) > 0 {
-			q.Set("expand", strings.Join(opts.Expand, ","))
-		}
+		addPaginationParams(q, opts.Start, opts.Limit, opts.Expand)
 		if len(q) > 0 {
 			u += "?" + q.Encode()
 		}
@@ -206,4 +194,15 @@ func (s *ContentService) GetAttachments(ctx context.Context, contentID string, o
 	}
 
 	return &result, resp, nil
+}
+
+// addPaginationParams 添加分页和展开参数
+func addPaginationParams(q url.Values, start, limit int, expand []string) {
+	q.Set("start", fmt.Sprintf("%d", start))
+	if limit != 0 {
+		q.Set("limit", fmt.Sprintf("%d", limit))
+	}
+	if len(expand) > 0 {
+		q.Set("expand", strings.Join(expand, ","))
+	}
 }
