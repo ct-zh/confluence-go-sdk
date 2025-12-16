@@ -54,3 +54,21 @@ Confluence 目前提供多套 API (Cloud v1, Cloud v2, Server/DC)。作为 SDK�
     *   **Template**: 定义了 API 概览、请求参数表、响应示例的 XHTML 模板。
     *   **Output**: 渲染后的 HTML 字符串，直接赋值给 `Body.Storage.Value`。
 
+### 标准模板库 (Standard Template Library)
+
+为了降低用户的使用门槛，SDK 将在 `template/` 目录下提供一套经过验证的、开箱即用的标准模板库。
+
+1.  **目录结构**:
+    *   `confluence/template/`: 存放所有标准模板文件 (`.html` 或 `.gohtml`)。
+    *   利用 Go 1.16+ `embed` 特性将模板文件打包进二进制中，确保零依赖分发。
+
+2.  **加载机制**:
+    *   **内置模板**: 用户可以通过常量名称直接加载，例如 `template.Load(template.SwaggerDoc)`。
+    *   **自定义模板**: 用户依然可以传入文件路径或字符串内容来使用自定义模板。
+
+3.  **预置模板规划**:
+    *   `SwaggerDoc`: 标准化的 API 接口文档。
+    *   `ReleaseNote`: 包含变更日志、Jira 链接的版本发布说明。
+    *   `MeetingNotes`: 会议纪要模板，包含参会人、议程、Action Items。
+
+
