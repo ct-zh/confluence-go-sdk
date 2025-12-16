@@ -1,0 +1,11 @@
+# Ignore test configuration
+test_config.json
+confluence/test_config.json
+
+# Mac system files
+.DS_Store
+
+# Go build binaries
+*.exe
+*.test
+*.out
