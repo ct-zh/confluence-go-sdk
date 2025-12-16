@@ -15,19 +15,19 @@ type SpaceService struct {
 
 // Space 空间信息 (增强版)
 type Space struct {
-	ID          int64             `json:"id,omitempty"`
-	Key         string            `json:"key"`
-	Name        string            `json:"name"`
-	Type        string            `json:"type,omitempty"` // global, personal
-	Description *SpaceDescription `json:"description,omitempty"`
-	Homepage    *Content          `json:"homepage,omitempty"`
-	Links       *Links            `json:"_links,omitempty"`
+	ID          int64             `json:"id,omitempty"` // 空间 ID
+	Key         string            `json:"key"`          // 空间标识 (Key)
+	Name        string            `json:"name"`         // 空间名称
+	Type        string            `json:"type,omitempty"` // 空间类型：global (全局), personal (个人)
+	Description *SpaceDescription `json:"description,omitempty"` // 空间描述
+	Homepage    *Content          `json:"homepage,omitempty"`    // 空间主页
+	Links       *Links            `json:"_links,omitempty"`      // 链接资源
 }
 
 // SpaceDescription 空间描述
 type SpaceDescription struct {
-	Plain *BodyContent `json:"plain,omitempty"`
-	View  *BodyContent `json:"view,omitempty"`
+	Plain *BodyContent `json:"plain,omitempty"` // 纯文本描述
+	View  *BodyContent `json:"view,omitempty"`  // 渲染后的 HTML 描述
 }
 
 // GetSpaceOptions 获取空间的选项

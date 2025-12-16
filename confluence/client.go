@@ -11,22 +11,22 @@ import (
 )
 
 const (
-	defaultUserAgent = "confluence-go-sdk/1.0"
+	defaultUserAgent = "confluence-go-sdk/1.0" // 默认用户代理字符串
 )
 
 // Client Confluence API 客户端
 // 包含通用配置和各个服务模块的访问入口
 type Client struct {
-	httpClient *http.Client
-	baseURL    *url.URL
-	userAgent  string
-	auth       authenticator
+	httpClient *http.Client  // HTTP 客户端，用于发送网络请求
+	baseURL    *url.URL      // Confluence 实例的基础 URL
+	userAgent  string        // 用户代理字符串
+	auth       authenticator // 认证接口，处理请求鉴权
 
-	// Services
+	// Services 业务服务模块
 	// 将在这里挂载各个业务模块
-	Content IContentService
-	Search  ISearchService
-	Space   ISpaceService
+	Content IContentService // 内容服务（页面、博客、附件）
+	Search  ISearchService  // 搜索服务
+	Space   ISpaceService   // 空间服务
 }
 
 // NewClient 创建一个新的 Confluence 客户端

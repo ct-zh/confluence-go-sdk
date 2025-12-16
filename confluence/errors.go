@@ -11,9 +11,9 @@ import (
 type ErrorResponse struct {
 	StatusCode int `json:"-"` // HTTP 状态码
 	Data       struct {
-		Authorized bool     `json:"authorized"`
-		Valid      bool     `json:"valid"`
-		Errors     []APIError `json:"errors"`
+		Authorized bool     `json:"authorized"` // 是否已授权
+		Valid      bool     `json:"valid"`      // 请求是否有效
+		Errors     []APIError `json:"errors"`   // 错误列表
 	} `json:"data"`
 	Message string `json:"message"` // 顶层错误信息
 }
@@ -21,8 +21,8 @@ type ErrorResponse struct {
 // APIError 具体的错误详情
 type APIError struct {
 	Message struct {
-		Translation string   `json:"translation"`
-		Args        []string `json:"args"`
+		Translation string   `json:"translation"` // 错误描述（翻译后）
+		Args        []string `json:"args"`        // 错误参数
 	} `json:"message"`
 }
 

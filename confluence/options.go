@@ -46,8 +46,8 @@ type authenticator interface {
 
 // basicAuth 实现 Basic Authentication
 type basicAuth struct {
-	email string
-	token string
+	email string // 用户邮箱
+	token string // API Token
 }
 
 func (b *basicAuth) SetAuth(req *http.Request) {
@@ -56,7 +56,7 @@ func (b *basicAuth) SetAuth(req *http.Request) {
 
 // tokenAuth 实现 Bearer Token Authentication
 type tokenAuth struct {
-	token string
+	token string // Bearer Token
 }
 
 func (t *tokenAuth) SetAuth(req *http.Request) {

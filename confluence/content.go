@@ -18,41 +18,41 @@ type ContentService struct {
 // Content 表示 Confluence 中的内容实体
 // 仅包含核心字段，遵循 Less is More 原则
 type Content struct {
-	ID        string    `json:"id,omitempty"` // Create 时不需要 ID
-	Type      string    `json:"type"`         // page, blogpost
-	Status    string    `json:"status,omitempty"`
-	Title     string    `json:"title"`
-	Space     *Space    `json:"space,omitempty"`
-	Body      *Body     `json:"body,omitempty"`
-	Version   *Version  `json:"version,omitempty"`
-	Ancestors []Content `json:"ancestors,omitempty"`
-	Links     *Links    `json:"_links,omitempty"`
+	ID        string    `json:"id,omitempty"` // 内容 ID，创建时无需提供
+	Type      string    `json:"type"`         // 内容类型：page (页面) 或 blogpost (博客)
+	Status    string    `json:"status,omitempty"` // 内容状态：current (当前), trashed (回收站), historical (历史)
+	Title     string    `json:"title"`        // 内容标题
+	Space     *Space    `json:"space,omitempty"` // 所属空间
+	Body      *Body     `json:"body,omitempty"`  // 内容正文
+	Version   *Version  `json:"version,omitempty"` // 版本信息
+	Ancestors []Content `json:"ancestors,omitempty"` // 祖先节点（用于构建层级）
+	Links     *Links    `json:"_links,omitempty"`    // HATEOAS 链接
 }
 
 // Version 版本信息
 type Version struct {
-	Number    int    `json:"number"`
-	Message   string `json:"message,omitempty"`
-	MinorEdit bool   `json:"minorEdit,omitempty"`
+	Number    int    `json:"number"`            // 版本号
+	Message   string `json:"message,omitempty"` // 版本注释
+	MinorEdit bool   `json:"minorEdit,omitempty"` // 是否为微小修改（不触发通知）
 }
 
 // Body 内容正文
 type Body struct {
-	Storage *BodyContent `json:"storage,omitempty"` // 存储格式 (XHTML)
-	View    *BodyContent `json:"view,omitempty"`    // 显示格式 (HTML)
+	Storage *BodyContent `json:"storage,omitempty"` // 存储格式 (XHTML)，用于编辑和更新
+	View    *BodyContent `json:"view,omitempty"`    // 显示格式 (HTML)，用于前端展示
 }
 
 // BodyContent 具体格式的内容
 type BodyContent struct {
-	Value          string `json:"value"`
-	Representation string `json:"representation"` // storage, view
+	Value          string `json:"value"`          // 内容字符串
+	Representation string `json:"representation"` // 表现形式：storage, view, wiki, plain 等
 }
 
 // Links 通用链接结构
 type Links struct {
-	Self string `json:"self"`
-	Base string `json:"base"`
-	Web  string `json:"webui"`
+	Self string `json:"self"`  // 自身资源的 API 链接
+	Base string `json:"base"`  // Confluence 实例的基础 URL
+	Web  string `json:"webui"` // 浏览器可访问的 Web UI 链接
 }
 
 // GetContentOptions 获取内容的选项

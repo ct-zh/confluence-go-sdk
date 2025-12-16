@@ -14,19 +14,19 @@ type SearchService struct {
 
 // SearchResult 搜索结果分页结构
 type SearchResult struct {
-	Results []Content `json:"results"`
-	Start   int       `json:"start"`
-	Limit   int       `json:"limit"`
-	Size    int       `json:"size"`
-	Links   *Links    `json:"_links,omitempty"`
+	Results []Content `json:"results"`        // 搜索结果列表
+	Start   int       `json:"start"`          // 当前页起始位置
+	Limit   int       `json:"limit"`          // 每页限制数量
+	Size    int       `json:"size"`           // 当前页实际返回数量
+	Links   *Links    `json:"_links,omitempty"` // 分页链接（上一页、下一页等）
 }
 
 // SearchOptions 搜索选项
 type SearchOptions struct {
-	CQL    string // Confluence Query Language
-	Limit  int    // 每页数量
-	Start  int    // 起始位置
-	Expand []string // 需要展开的字段
+	CQL    string   // Confluence Query Language (必填)
+	Limit  int      // 每页数量 (默认 25)
+	Start  int      // 起始位置 (默认 0)
+	Expand []string // 需要展开的字段，例如 "content.body.view"
 }
 
 // Search 执行 CQL 搜索
