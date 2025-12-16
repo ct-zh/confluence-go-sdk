@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"confluence-go-sdk/confluence"
+	"confluence-go-sdk/pkg/confluence"
 )
 
 // MockContentService 是 IContentService 的 Mock 实现

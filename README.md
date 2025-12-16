@@ -29,7 +29,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/your-username/confluence-go-sdk/confluence"
+	"github.com/your-username/confluence-go-sdk/pkg/confluence"
 )
 
 func main() {

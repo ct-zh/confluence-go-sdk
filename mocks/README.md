@@ -35,7 +35,7 @@ import (
 	"errors"
 	"testing"
 
-	"confluence-go-sdk/confluence"
+	"confluence-go-sdk/pkg/confluence"
 	"confluence-go-sdk/mocks"
 )
 

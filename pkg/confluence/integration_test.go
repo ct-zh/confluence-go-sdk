@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	tpl "confluence-go-sdk/confluence/template"
+	tpl "confluence-go-sdk/pkg/confluence/template"
 )
 
 // IntegrationConfig 集成测试配置

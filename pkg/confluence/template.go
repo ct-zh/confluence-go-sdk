@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"sync"
 
-	tpl "confluence-go-sdk/confluence/template"
+	tpl "confluence-go-sdk/pkg/confluence/template"
 )
 
 // TemplateRenderer 提供基于 html/template 的内容渲染功能
