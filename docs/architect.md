@@ -37,3 +37,20 @@ Confluence 目前提供多套 API (Cloud v1, Cloud v2, Server/DC)。作为 SDK�
 3.  **Server/Data Center**:
     *   目前暂不作为首要目标，但保持架构的开放性（通过 `BaseURL` 和 `Authenticator` 接口）以允许社区适配。
 
+### 内容生成与模板引擎 (Content Generation & Templating)
+
+为了支持复杂的页面生成需求（如 API 文档、自动化报告），SDK 将引入 **模板渲染层**。
+
+1.  **设计理念**:
+    *   **分离数据与视图**: 使用 Go 标准库 `html/template` 作为核心渲染引擎。
+    *   **Storage Format 抽象**: Confluence 的存储格式 (XHTML) 包含大量专有宏 (`ac:structured-macro`)。SDK 应提供 Helper 函数或预定义模板组件来简化这些宏的生成。
+
+2.  **架构组件**:
+    *   **`TemplateRenderer`**: 负责将 Go 结构体 + 模板字符串渲染为合法的 Confluence Storage Format HTML。
+    *   **`PageBuilder` (可选)**: 链式调用构建页面内容的辅助工具。
+
+3.  **应用场景示例 (Swagger to Confluence)**:
+    *   **Input**: OpenAPI/Swagger Specification (Struct).
+    *   **Template**: 定义了 API 概览、请求参数表、响应示例的 XHTML 模板。
+    *   **Output**: 渲染后的 HTML 字符串，直接赋值给 `Body.Storage.Value`。
+
