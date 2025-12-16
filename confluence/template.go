@@ -3,6 +3,7 @@ package confluence
 import (
 	"bytes"
 	"html/template"
+	"sync"
 
 	tpl "confluence-go-sdk/confluence/template"
 )
@@ -12,6 +13,8 @@ import (
 type TemplateRenderer struct {
 	tmpl   *template.Template
 	loader tpl.Loader
+	mu     sync.RWMutex                  // 保护 cache
+	cache  map[string]*template.Template // 缓存已解析的模板
 }
 
 // NewTemplateRenderer 创建一个新的渲染器
@@ -27,37 +30,53 @@ func NewTemplateRenderer(loader tpl.Loader) *TemplateRenderer {
 			"infoPanel": renderInfoPanel,
 		}),
 		loader: loader,
+		cache:  make(map[string]*template.Template),
 	}
 }
 
 // Parse 解析模板字符串
+// 注意：Parse 会直接修改基础模板，非并发安全，建议初始化时完成
 func (r *TemplateRenderer) Parse(name, text string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	_, err := r.tmpl.New(name).Parse(text)
 	return err
 }
 
 // LoadAndRender 加载并渲染模板
+// 线程安全，支持缓存
 func (r *TemplateRenderer) LoadAndRender(templateName string, data interface{}) (string, error) {
-	// 1. 尝试从 Loader 加载模板内容
-	content, err := r.loader.Load(templateName)
-	if err != nil {
-		return "", err
+	// 1. 尝试从缓存获取
+	r.mu.RLock()
+	t, ok := r.cache[templateName]
+	r.mu.RUnlock()
+
+	if !ok {
+		// 2. 缓存未命中，加载并解析
+		content, err := r.loader.Load(templateName)
+		if err != nil {
+			return "", err
+		}
+
+		// 克隆基础模板以继承 FuncMap
+		// 注意：template.Clone() 并非完全线程安全，需要在初始化后不再修改基础模板
+		base, err := r.tmpl.Clone()
+		if err != nil {
+			return "", err
+		}
+
+		t, err = base.New(templateName).Parse(content)
+		if err != nil {
+			return "", err
+		}
+
+		// 3. 写入缓存
+		r.mu.Lock()
+		r.cache[templateName] = t
+		r.mu.Unlock()
 	}
 
-	// 2. 解析模板
-	// 注意：这里每次都重新解析可能不是最高效的，但对于 SDK 使用场景（通常一次性生成）是可以接受的
-	// 且避免了模板名称冲突的问题
-	t, err := r.tmpl.Clone() // 克隆基础模板以保留 FuncMap
-	if err != nil {
-		return "", err
-	}
-
-	_, err = t.New(templateName).Parse(content)
-	if err != nil {
-		return "", err
-	}
-
-	// 3. 渲染
+	// 4. 渲染
 	var buf bytes.Buffer
 	if err := t.ExecuteTemplate(&buf, templateName, data); err != nil {
 		return "", err
