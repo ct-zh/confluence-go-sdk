@@ -2,6 +2,7 @@
   "base_url": "https://your-domain.atlassian.net/wiki",
   "username": "your-email@example.com",
   "token": "your-api-token",
-  "test_space_key": "DS",
-  "test_content_id": "123456"
+  "test_space_key": "TEST",
+  "test_content_id": "123456",
+  "test_write_page_id": "73203845"
 }
