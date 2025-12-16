@@ -2,6 +2,7 @@ package confluence
 
 import (
 	"context"
+	"io"
 	"net/http"
 )
 
@@ -16,6 +17,9 @@ type IContentService interface {
 	GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error)
 	// GetAttachments 获取页面的附件列表
 	GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error)
+	// UploadAttachment 上传附件
+	// comment: 附件的注释（可选）
+	UploadAttachment(ctx context.Context, contentID string, filename string, data io.Reader, comment string) (*SearchResult, *http.Response, error)
 }
 
 // ISearchService 定义 SearchService 的行为接口

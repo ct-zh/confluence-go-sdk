@@ -1,8 +1,11 @@
 package confluence
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -186,6 +189,56 @@ func (s *ContentService) GetAttachments(ctx context.Context, contentID string, o
 	if err != nil {
 		return nil, nil, err
 	}
+
+	var result SearchResult
+	resp, err := s.client.Do(req, &result)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return &result, resp, nil
+}
+
+// UploadAttachment 上传附件
+// 文档: https://developer.atlassian.com/cloud/confluence/rest/v1/api-group-content-children-and-descendants/#api-wiki-rest-api-content-id-child-attachment-post
+func (s *ContentService) UploadAttachment(ctx context.Context, contentID string, filename string, data io.Reader, comment string) (*SearchResult, *http.Response, error) {
+	u := fmt.Sprintf("rest/api/content/%s/child/attachment", url.PathEscape(contentID))
+
+	// 创建 multipart body
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// 添加文件
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return nil, nil, err
+	}
+	if _, err := io.Copy(part, data); err != nil {
+		return nil, nil, err
+	}
+
+	// 添加注释（可选）
+	if comment != "" {
+		if err := writer.WriteField("comment", comment); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// 关闭 writer 以写入结尾 boundary
+	if err := writer.Close(); err != nil {
+		return nil, nil, err
+	}
+
+	// 创建请求
+	req, err := s.client.NewRequest(ctx, "POST", u, body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 手动设置 Content-Type，包含 boundary
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	// 这是一个特殊 header，用于绕过 XSRF 检查（某些 Confluence 版本需要）
+	req.Header.Set("X-Atlassian-Token", "nocheck")
 
 	var result SearchResult
 	resp, err := s.client.Do(req, &result)
