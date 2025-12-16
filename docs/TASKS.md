@@ -1,83 +1,44 @@
-# 架构规划 - 阶段 2: 空间管理 (Space Management)
+# 架构规划 - 阶段 3: 附件与层级管理 (Attachments & Hierarchy)
 
 ## 1. 概述 (Overview)
-目前 SDK 已支持基础的 Content (Page/Blogpost) 操作和 Search 功能。为了完善 SDK 的能力，下一个关键组件是 **Space Management (空间管理)**。
+SDK 目前已具备 Content, Search, Space 三大核心模块。为了满足更深度的文档管理需求，下一阶段将聚焦于 **非结构化数据 (Attachments)** 和 **文档结构 (Child Pages)** 的处理。
 
 ## 2. 架构设计 (Architecture)
 
-我们将引入 `SpaceService`，遵循现有的 `Service` 模式。
+### 2.1 附件服务 (AttachmentService)
+附件虽然属于 `Content` 的一种特殊类型，但其操作（上传、下载）涉及二进制流处理，建议独立封装或在 `ContentService` 中通过专用方法处理。为了保持接口简洁，我们将在 `ContentService` 中扩展。
 
-### 2.1 接口定义 (Interface Definition)
-在 `confluence/interfaces.go` 中添加 `ISpaceService`：
+**变更点**:
+- 扩展 `IContentService` 接口，增加附件相关方法。
+- 引入 `multipart/form-data` 处理逻辑。
 
 ```go
-// ISpaceService 定义 SpaceService 的行为接口
-type ISpaceService interface {
-    // Get 获取指定 Space 信息
-    Get(ctx context.Context, spaceKey string, opts *GetSpaceOptions) (*Space, *http.Response, error)
+type IContentService interface {
+    // ... existing methods
     
-    // Create 创建一个新的 Space
-    Create(ctx context.Context, space *Space, opts *CreateSpaceOptions) (*Space, *http.Response, error)
+    // GetChildPages 获取子页面
+    GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error)
     
-    // Update 更新 Space 信息
-    Update(ctx context.Context, spaceKey string, space *Space) (*Space, *http.Response, error)
-    
-    // Delete 删除 Space
-    Delete(ctx context.Context, spaceKey string) (*http.Response, error)
+    // GetAttachments 获取页面的附件列表
+    GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error)
 }
 ```
 
-### 2.2 数据结构 (Data Structures)
-需要扩展 `Space` 结构体（可能需要从 `content.go` 中移动或增强），并在 `confluence/space.go` 中定义。
+*注意*: 附件的**上传** (Upload) 逻辑较为复杂（需要 `multipart`），暂定为 P1 优先级，先实现获取 (Get) 逻辑。
 
-```go
-// Space 空间信息 (增强版)
-type Space struct {
-    ID          int64             `json:"id,omitempty"`
-    Key         string            `json:"key"`
-    Name        string            `json:"name"`
-    Type        string            `json:"type,omitempty"` // global, personal
-    Description *SpaceDescription `json:"description,omitempty"`
-    Homepage    *Content          `json:"homepage,omitempty"`
-    Links       *Links            `json:"_links,omitempty"`
-}
-
-type SpaceDescription struct {
-    Plain *BodyContent `json:"plain,omitempty"`
-    View  *BodyContent `json:"view,omitempty"`
-}
-
-type GetSpaceOptions struct {
-    Expand []string // description.plain, homepage
-}
-
-type CreateSpaceOptions struct {
-    Private bool // 是否创建私有空间
-}
-```
-
-### 2.3 客户端集成 (Client Integration)
-在 `confluence/client.go` 中注册新服务。
-
-```go
-type Client struct {
-    // ... 现有字段
-    Space ISpaceService
-}
-
-// NewClient ...
-    c.Space = &SpaceService{client: c}
-```
+### 2.2 层级遍历 (Hierarchy Traversal)
+用户经常需要获取某个页面下的所有子页面。虽然可以通过 CQL 实现，但提供专用的 `GetChildPages` 方法能显著提升易用性。
 
 ## 3. 开发任务 (Tasks)
 
 请研发工程师按以下顺序执行：
 
-- [ ] **Refactor**: 检查 `confluence/content.go` 中的 `Space` 定义，准备将其增强或移动到新文件。
-- [ ] **Interface**: 在 `confluence/interfaces.go` 中添加 `ISpaceService` 接口定义。
-- [ ] **Implementation**: 创建 `confluence/space.go`，实现 `SpaceService` 及其方法 (`Get`, `Create`, `Update`, `Delete`)。
-- [ ] **Integration**: 更新 `confluence/client.go`，将 `SpaceService` 挂载到 `Client`。
-- [ ] **Test**: 创建 `confluence/space_test.go`，编写单元测试（使用 Mock 或集成测试）。
+- [ ] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `GetChildPages` 和 `GetAttachments`。
+- [ ] **Implementation**: 在 `confluence/content.go` 中实现上述方法。
+    - `GetChildPages`: 实际上是调用 `/rest/api/content/{id}/child/page`。
+    - `GetAttachments`: 调用 `/rest/api/content/{id}/child/attachment`。
+- [ ] **Test**: 更新 `confluence/content_test.go`，增加对应的 Mock 测试。
 
 ---
-**注意**: 请保持代码风格一致，确保所有公共方法都有注释。
+**技术债 (Tech Debt)**:
+- 目前 `Client` 的 `NewRequest` 仅支持 JSON Body，后续支持附件上传时需要重构以支持 `io.Reader` 和 `multipart`。

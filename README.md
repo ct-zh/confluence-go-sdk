@@ -48,14 +48,25 @@ func main() {
 		confluence.WithAuth(user, token),
 	)
 
-	// 3. 调用 API
+	// 3. 调用 API - 获取内容
 	ctx := context.Background()
-	content, err := client.Content.Get(ctx, "123456")
+	content, _, err := client.Content.Get(ctx, "123456", nil)
 	if err != nil {
 		log.Fatalf("获取内容失败: %v", err)
 	}
-
 	fmt.Printf("标题: %s\n", content.Title)
+
+	// 4. 调用 API - 搜索内容 (CQL)
+	searchOpts := &confluence.SearchOptions{
+		CQL:   "type=page AND space = 'DS'",
+		Limit: 10,
+	}
+	results, _, _ := client.Search.Search(ctx, searchOpts)
+	fmt.Printf("找到 %d 个页面\n", results.Size)
+
+	// 5. 调用 API - 空间操作
+	space, _, _ := client.Space.Get(ctx, "DS", nil)
+	fmt.Printf("空间名称: %s\n", space.Name)
 }
 ```
 
