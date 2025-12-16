@@ -126,3 +126,55 @@ func TestIntegration_Search(t *testing.T) {
 		t.Logf(" - %s (ID: %s)", item.Title, item.ID)
 	}
 }
+
+// TestIntegration_GetChildPages 集成测试：获取子页面 (只读)
+func TestIntegration_GetChildPages(t *testing.T) {
+	config := loadIntegrationConfig(t)
+	client := createIntegrationClient(t, config)
+
+	if config.TestContentID == "" {
+		t.Skip("Skipping TestIntegration_GetChildPages: test_content_id not configured")
+	}
+
+	ctx := context.Background()
+	// 获取前 5 个子页面
+	opts := &GetChildPagesOptions{
+		Limit: 5,
+	}
+	result, _, err := client.Content.GetChildPages(ctx, config.TestContentID, opts)
+	if err != nil {
+		t.Errorf("Failed to get child pages: %v", err)
+		return
+	}
+
+	t.Logf("Successfully retrieved %d child pages.", len(result.Results))
+	for _, page := range result.Results {
+		t.Logf(" - %s (ID: %s)", page.Title, page.ID)
+	}
+}
+
+// TestIntegration_GetAttachments 集成测试：获取附件 (只读)
+func TestIntegration_GetAttachments(t *testing.T) {
+	config := loadIntegrationConfig(t)
+	client := createIntegrationClient(t, config)
+
+	if config.TestContentID == "" {
+		t.Skip("Skipping TestIntegration_GetAttachments: test_content_id not configured")
+	}
+
+	ctx := context.Background()
+	// 获取前 5 个附件
+	opts := &GetAttachmentsOptions{
+		Limit: 5,
+	}
+	result, _, err := client.Content.GetAttachments(ctx, config.TestContentID, opts)
+	if err != nil {
+		t.Errorf("Failed to get attachments: %v", err)
+		return
+	}
+
+	t.Logf("Successfully retrieved %d attachments.", len(result.Results))
+	for _, att := range result.Results {
+		t.Logf(" - %s (Type: %s, ID: %s)", att.Title, att.Type, att.ID)
+	}
+}
