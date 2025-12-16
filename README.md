@@ -67,6 +67,23 @@ func main() {
 	// 5. 调用 API - 空间操作
 	space, _, _ := client.Space.Get(ctx, "DS", nil)
 	fmt.Printf("空间名称: %s\n", space.Name)
+
+	// 6. 调用 API - 获取子页面 (Hierarchy)
+	childOpts := &confluence.GetChildPagesOptions{
+		Limit: 5,
+		Expand: []string{"version"},
+	}
+	children, _, _ := client.Content.GetChildPages(ctx, "123456", childOpts)
+	fmt.Printf("找到 %d 个子页面\n", children.Size)
+
+	// 7. 调用 API - 获取附件 (Attachments)
+	attachOpts := &confluence.GetAttachmentsOptions{
+		Limit: 10,
+	}
+	attachments, _, _ := client.Content.GetAttachments(ctx, "123456", attachOpts)
+	for _, att := range attachments.Results {
+		fmt.Printf("附件: %s (Type: %s)\n", att.Title, att.Type)
+	}
 }
 ```
 

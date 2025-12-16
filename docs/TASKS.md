@@ -1,44 +1,46 @@
-# 架构规划 - 阶段 3: 附件与层级管理 (Attachments & Hierarchy)
+# 架构规划 - 阶段 4: 内容创建与附件上传 (Content Creation & Attachment Upload)
 
 ## 1. 概述 (Overview)
-SDK 目前已具备 Content, Search, Space 三大核心模块。为了满足更深度的文档管理需求，下一阶段将聚焦于 **非结构化数据 (Attachments)** 和 **文档结构 (Child Pages)** 的处理。
+Phase 3 完成了附件和层级结构的**读取**能力。为了实现完整的文档管理闭环，Phase 4 将聚焦于**写入**能力，重点攻克最复杂的 **附件上传 (Attachment Upload)** 和 **更新**。
 
 ## 2. 架构设计 (Architecture)
 
-### 2.1 附件服务 (AttachmentService)
-附件虽然属于 `Content` 的一种特殊类型，但其操作（上传、下载）涉及二进制流处理，建议独立封装或在 `ContentService` 中通过专用方法处理。为了保持接口简洁，我们将在 `ContentService` 中扩展。
+### 2.1 客户端重构 (Client Refactoring)
+目前的 `Client.NewRequest` 仅支持 JSON Body。为了支持文件上传，必须扩展其能力以处理 `io.Reader` 和 `multipart/form-data`。
 
 **变更点**:
-- 扩展 `IContentService` 接口，增加附件相关方法。
-- 引入 `multipart/form-data` 处理逻辑。
+- 重构 `NewRequest` 或新增 `NewUploadRequest` 方法。
+- 支持设置 `Content-Type` 为 `multipart/form-data`。
+
+### 2.2 附件上传 (Attachment Upload)
+附件上传 API (`POST /rest/api/content/{id}/child/attachment`) 需要特殊的请求体构造。
 
 ```go
 type IContentService interface {
     // ... existing methods
     
-    // GetChildPages 获取子页面
-    GetChildPages(ctx context.Context, contentID string, opts *GetChildPagesOptions) (*SearchResult, *http.Response, error)
-    
-    // GetAttachments 获取页面的附件列表
-    GetAttachments(ctx context.Context, contentID string, opts *GetAttachmentsOptions) (*SearchResult, *http.Response, error)
+    // UploadAttachment 上传附件
+    // comment: 附件的注释（可选）
+    UploadAttachment(ctx context.Context, contentID string, filename string, data io.Reader, comment string) (*SearchResult, *http.Response, error)
 }
 ```
 
-*注意*: 附件的**上传** (Upload) 逻辑较为复杂（需要 `multipart`），暂定为 P1 优先级，先实现获取 (Get) 逻辑。
-
-### 2.2 层级遍历 (Hierarchy Traversal)
-用户经常需要获取某个页面下的所有子页面。虽然可以通过 CQL 实现，但提供专用的 `GetChildPages` 方法能显著提升易用性。
+### 2.3 标签管理 (Label Management) - 可选
+为了更好地组织内容，支持标签 (Labels) 的添加和删除也是必要的。
 
 ## 3. 开发任务 (Tasks)
 
 请研发工程师按以下顺序执行：
 
-- [x] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `GetChildPages` 和 `GetAttachments`。
-- [x] **Implementation**: 在 `confluence/content.go` 中实现上述方法。
-    - `GetChildPages`: 实际上是调用 `/rest/api/content/{id}/child/page`。
-    - `GetAttachments`: 调用 `/rest/api/content/{id}/child/attachment`。
-- [x] **Test**: 更新 `confluence/content_test.go`，增加对应的 Mock 测试。
+- [ ] **Core Refactor**: 修改 `confluence/client.go`，使 `NewRequest` 支持 `io.Reader` 作为 Body，或添加 `NewUploadRequest` 辅助方法。
+- [ ] **Interface**: 更新 `confluence/interfaces.go`，在 `IContentService` 中添加 `UploadAttachment`。
+- [ ] **Implementation**: 在 `confluence/content.go` 中实现 `UploadAttachment`。
+    - 使用 `mime/multipart` 构造请求体。
+    - 确保正确设置 Boundary。
+- [ ] **Test**: 更新 `confluence/content_test.go`，增加附件上传的 Mock 测试。
 
 ---
-**技术债 (Tech Debt)**:
-- 目前 `Client` 的 `NewRequest` 仅支持 JSON Body，后续支持附件上传时需要重构以支持 `io.Reader` 和 `multipart`。
+**历史记录 (History)**:
+- [x] Phase 1: 核心架构与基础 CRUD (Content, Search)
+- [x] Phase 2: 空间管理 (Space Management)
+- [x] Phase 3: 附件与层级管理 (Attachments & Hierarchy) - Read Only
